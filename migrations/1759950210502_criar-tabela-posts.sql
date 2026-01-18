@@ -20,7 +20,7 @@ CREATE TABLE "properties" (
   "arable_area" integer NOT NULL,
   "vegetation_area" integer NOT NULL,
   "created_at" timestamp DEFAULT NOW(),
-  "updated_at" timestamp,
+  "updated_at" timestamp
 
   CONSTRAINT fk_properties_producers
     FOREIGN KEY ("id_producer")
@@ -59,8 +59,8 @@ CREATE TABLE "crops" (
   CONSTRAINT fk_crops_cultures
     FOREIGN KEY ("id_culture")
     REFERENCES "cultures" ("id_culture")
-    ON DELETE CASCADE,
-)
+    ON DELETE CASCADE
+);
 -- Down Migration
 
 DROP TABLE IF EXISTS "crops";
