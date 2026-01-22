@@ -64,7 +64,7 @@
     "@types/supertest": "^6.0.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
+    "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.0.0",
     "husky": "^9.1.7",
     "node-pg-migrate": "^8.0.4",
