@@ -1,4 +1,4 @@
-FROM node:25.3 AS test-stage
+FROM node:25.4 AS test-stage
 
 WORKDIR /usr/src/app
 
@@ -12,7 +12,7 @@ RUN npm run test
 
 
 
-FROM node:25.3 AS build-stage
+FROM node:25.4 AS build-stage
 
 WORKDIR /usr/src/app
 
@@ -26,7 +26,7 @@ RUN npm run build
 
 
 
-FROM node:25.3
+FROM node:25.4
 
 WORKDIR /usr/src/app
 
