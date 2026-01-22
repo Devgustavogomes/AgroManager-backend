@@ -8,6 +8,7 @@ import { AuthModule } from './infra/auth/module';
 import { RedisModule } from './infra/redis/module';
 import { MigrationModule } from './infra/migration/module';
 import { PropertyModule } from './modules/property/module';
+import { CultureModule } from './modules/culture/module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PropertyModule } from './modules/property/module';
     RedisModule,
     MigrationModule,
     PropertyModule,
+    CultureModule,
   ],
   controllers: [],
   providers: [],

@@ -24,7 +24,6 @@ export class OwnerGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const producer = request.producer;
-    const { id } = request.params;
 
     if (!producer) {
       throw new UnauthorizedException();
@@ -34,20 +33,25 @@ export class OwnerGuard implements CanActivate {
       return true;
     }
 
-    const serviceToken = this.reflector.getAllAndOverride(OWNER_SERVICE_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const serviceToken = this.reflector.getAllAndOverride<{
+      service: any;
+      paramKey?: string;
+    }>(OWNER_SERVICE_KEY, [context.getHandler(), context.getClass()]);
 
     if (!serviceToken) {
       return true;
     }
 
-    const service: Service = await this.moduleRef.get(serviceToken, {
+    const service: Service = await this.moduleRef.get(serviceToken.service, {
       strict: false,
     });
 
-    const owner = await service.isOwner(producer.id, id);
+    const resourceId = serviceToken.paramKey
+      ? request.params[serviceToken.paramKey]
+      : request.params.id;
+
+    const owner = await service.isOwner(producer.id, resourceId);
+
     if (!owner) {
       throw new ForbiddenException('You do not own this resource.');
     }
