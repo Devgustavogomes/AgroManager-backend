@@ -11,6 +11,7 @@ import { DatabaseService } from 'src/infra/database/service';
 import { PoolClient } from 'pg';
 import { MAX_PROPERTIES } from 'src/config/constants';
 import { PropertyContract } from './contract';
+import { Area } from 'src/shared/value-object/Area';
 
 @Injectable()
 export class PropertyService {
@@ -40,7 +41,7 @@ export class PropertyService {
       arableArea,
       vegetationArea,
     };
-    return this.db.transactiontransaction(async (client: PoolClient) => {
+    return this.db.transaction(async (client: PoolClient) => {
       const properties = await this.propertyRepository.count(id, client);
 
       if (properties > MAX_PROPERTIES) {
@@ -101,14 +102,16 @@ export class PropertyService {
     arable: number,
     vegetation: number,
   ): { arableArea: number; vegetationArea: number; totalArea: number } {
-    const arableArea = arable * 100;
+    const arableArea = Area.fromFloat(arable);
 
-    const vegetationArea = vegetation * 100;
+    const vegetationArea = Area.fromFloat(vegetation);
+
+    const totalArea = arableArea.add(vegetationArea);
 
     return {
-      arableArea,
-      vegetationArea,
-      totalArea: arableArea + vegetationArea,
+      arableArea: arableArea.getIntegerValue(),
+      vegetationArea: vegetationArea.getIntegerValue(),
+      totalArea: totalArea.getIntegerValue(),
     };
   }
 }

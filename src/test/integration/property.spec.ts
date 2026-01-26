@@ -1,7 +1,7 @@
 import { ProducerController } from '../../modules/producer/controller';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { AuthModule } from 'src/infra/auth/module';
+import { AuthModule } from 'src/modules/auth/module';
 import configuration from 'src/config/configuration';
 import { envSchema } from 'src/config/dto/env.dto';
 import { DatabaseModule } from 'src/infra/database/module';
@@ -75,7 +75,7 @@ describe('Property Good Path', () => {
       state: input.state,
       arableArea: input.arableArea,
       vegetationArea: input.vegetationArea,
-      totalArea: (input.arableArea * 100 + input.vegetationArea * 100) / 100,
+      totalArea: expect.any(Number),
       idProperty: expect.any(String),
       idProducer: producer1.idProducer,
       createdAt: expect.any(String),

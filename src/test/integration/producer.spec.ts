@@ -1,7 +1,7 @@
 import { RedisModule } from 'src/infra/redis/module';
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { AuthModule } from 'src/infra/auth/module';
+import { AuthModule } from 'src/modules/auth/module';
 import configuration from 'src/config/configuration';
 import { envSchema } from 'src/config/dto/env.dto';
 import { DatabaseModule } from 'src/infra/database/module';
