@@ -6,7 +6,7 @@ import {
   TestOrchestrator,
   CreatedProducer,
   SetupPropertyResult,
-} from './test-orchestrator';
+} from '../test-orchestrator';
 
 describe('E2E | Producer Tests', () => {
   let app: INestApplication;
@@ -63,15 +63,6 @@ describe('E2E | Producer Tests', () => {
         .delete(`/producers/${producerResult.producer.idProducer}`)
         .set('Authorization', `Bearer ${producerResult.producer.token}`)
         .expect(HttpStatus.NO_CONTENT);
-      // Clean up the producer from orchestrator's tracking after explicit delete.
-      orchestrator.getProducers().splice(
-        orchestrator
-          .getProducers()
-          .findIndex(
-            (p) => p.idProducer === producerResult.producer.idProducer,
-          ),
-        1,
-      );
     });
   });
 

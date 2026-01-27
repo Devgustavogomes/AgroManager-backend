@@ -9,7 +9,7 @@ import {
   TestOrchestrator,
   SetupPropertyResult,
   CreatedProperty,
-} from './test-orchestrator';
+} from '../test-orchestrator';
 
 describe('E2E | Property Tests', () => {
   let app: INestApplication;

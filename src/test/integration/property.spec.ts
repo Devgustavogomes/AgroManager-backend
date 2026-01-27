@@ -1,90 +1,107 @@
-import { ProducerController } from '../../modules/producer/controller';
-import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { AuthModule } from 'src/modules/auth/module';
-import configuration from 'src/config/configuration';
-import { envSchema } from 'src/config/dto/env.dto';
-import { DatabaseModule } from 'src/infra/database/module';
-import { ProducerModule } from 'src/modules/producer/module';
+import { AppModule } from 'src/app.module';
+import { INestApplication } from '@nestjs/common';
+import { TestOrchestrator } from '../test-orchestrator';
 import { PropertyController } from 'src/modules/property/controller';
-import { PropertyModule } from 'src/modules/property/module';
-import { RedisModule } from 'src/infra/redis/module';
-import { AuthenticatedRequest } from 'src/shared/types/authenticatedRequest';
+import { ProducerController } from 'src/modules/producer/controller';
 import { ProducerOutput } from 'src/modules/producer/dto';
+import { AuthenticatedRequest } from 'src/shared/types/authenticatedRequest';
+import { PropertyOutputDto } from 'src/modules/property/dto';
 
-let propertyController: PropertyController;
-let producerController: ProducerController;
-let producer1: ProducerOutput;
-let producer2: ProducerOutput;
+describe('Integration | Property Tests', () => {
+  let app: INestApplication;
+  let orchestrator: TestOrchestrator;
+  let propertyController: PropertyController;
+  let producerController: ProducerController;
+  let producer1: ProducerOutput;
+  let property: PropertyOutputDto;
 
-beforeAll(async () => {
-  const moduleRef = await Test.createTestingModule({
-    imports: [
-      ConfigModule.forRoot({
-        isGlobal: true,
-        envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
-        load: [configuration],
-        validate: (env) => envSchema.parse(env),
-      }),
-      AuthModule,
-      DatabaseModule,
-      RedisModule,
-      ProducerModule,
-      PropertyModule,
-    ],
-  }).compile();
+  beforeAll(async () => {
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-  propertyController = moduleRef.get<PropertyController>(PropertyController);
+    app = moduleRef.createNestApplication();
+    await app.init();
 
-  producerController = moduleRef.get<ProducerController>(ProducerController);
+    orchestrator = new TestOrchestrator(app);
+    propertyController = moduleRef.get<PropertyController>(PropertyController);
+    producerController = moduleRef.get<ProducerController>(ProducerController);
 
-  producer1 = await producerController.create({
-    username: 'string',
-    email: '13203567854',
-    password: "^%B'aQqRxsgq>-U1^",
-  });
-
-  producer2 = await producerController.create({
-    username: 'string',
-    email: '13203567855',
-    password: "^%B'aQqRxsgq>-U1^",
-  });
-});
-
-describe('Property Good Path', () => {
-  test('Create Property Successfull', async () => {
-    const input = {
-      name: 'string',
-      city: 'string',
-      state: 'strin',
-      arableArea: 5000,
-      vegetationArea: 3000,
+    const p1Input = {
+      username: 'string',
+      email: `13203567854-${Date.now()}@gmail.com`,
+      password: "^%B'aQqRxsgq>-U1^",
     };
 
-    const auth = {
-      producer: {
-        id: producer1.idProducer,
-      },
-    } as AuthenticatedRequest;
+    producer1 = await producerController.create(p1Input);
 
-    const result = await propertyController.create(auth, input);
-
-    expect(result).toStrictEqual({
-      name: input.name,
-      city: input.city,
-      state: input.state,
-      arableArea: input.arableArea,
-      vegetationArea: input.vegetationArea,
-      totalArea: expect.any(Number),
-      idProperty: expect.any(String),
+    const token1 = await orchestrator.login(p1Input);
+    orchestrator.getProducers().push({
       idProducer: producer1.idProducer,
-      createdAt: expect.any(String),
-      updatedAt: null,
+      token: token1,
+      data: producer1,
+    });
+
+    const p2Input = {
+      username: 'string',
+      email: `13203567855-${Date.now()}@gmail.com`,
+      password: "^%B'aQqRxsgq>-U1^",
+    };
+    const producer2 = await producerController.create(p2Input);
+    const token2 = await orchestrator.login(p2Input);
+    orchestrator.getProducers().push({
+      idProducer: producer2.idProducer,
+      token: token2,
+      data: producer2,
     });
   });
-});
 
-afterAll(async () => {
-  await producerController.remove(producer1.idProducer);
-  await producerController.remove(producer2.idProducer);
+  afterAll(async () => {
+    await orchestrator.destroy();
+    await app.close();
+  });
+
+  describe('Property Good Path', () => {
+    test('Create Property Successfull', async () => {
+      const input = {
+        name: 'string',
+        city: 'string',
+        state: 'strin',
+        arableArea: 5000,
+        vegetationArea: 3000,
+      };
+
+      const auth = {
+        producer: {
+          id: producer1.idProducer,
+        },
+      } as AuthenticatedRequest;
+
+      property = await propertyController.create(auth, input);
+
+      const token = orchestrator
+        .getProducers()
+        .find((p) => p.idProducer === producer1.idProducer)!.token;
+
+      orchestrator.getProperties().push({
+        idProperty: property.idProperty,
+        data: property,
+        token,
+      });
+
+      expect(property).toStrictEqual({
+        name: input.name,
+        city: input.city,
+        state: input.state,
+        arableArea: input.arableArea,
+        vegetationArea: input.vegetationArea,
+        totalArea: expect.any(Number),
+        idProperty: expect.any(String),
+        idProducer: producer1.idProducer,
+        createdAt: expect.any(String),
+        updatedAt: null,
+      });
+    });
+  });
 });

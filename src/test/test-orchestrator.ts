@@ -165,6 +165,10 @@ export class TestOrchestrator {
     return this.producers;
   }
 
+  getProperties(): (CreatedProperty & { token: string })[] {
+    return this.properties;
+  }
+
   async destroy(): Promise<void> {
     for (const crop of this.crops.reverse()) {
       await request(this.app.getHttpServer())
