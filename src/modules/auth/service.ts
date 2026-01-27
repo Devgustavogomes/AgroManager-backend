@@ -32,33 +32,29 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    try {
-      const payload = {
-        id: producer.id_producer,
-        username: producer.username,
-        role: producer.role,
-      };
+    const payload = {
+      id: producer.id_producer,
+      username: producer.username,
+      role: producer.role,
+    };
 
-      const refreshToken = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('REFRESH_SECRET'),
-        expiresIn: '7d',
-      });
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('REFRESH_SECRET'),
+      expiresIn: '7d',
+    });
 
-      await this.redisService.set(
-        `refresh_${producer.id_producer}`,
-        refreshToken,
-        604800,
-      );
+    await this.redisService.set(
+      `refresh_${producer.id_producer}`,
+      refreshToken,
+      604800,
+    );
 
-      const accessToken = await this.jwtService.signAsync(payload);
+    const accessToken = await this.jwtService.signAsync(payload);
 
-      return {
-        accessToken,
-        refreshToken,
-      };
-    } catch {
-      throw new UnauthorizedException();
-    }
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   async logout(producer: AuthenticatedRequest['producer']) {
@@ -71,7 +67,7 @@ export class AuthService {
     const refreshToken = req.cookies['refresh_token'];
 
     if (!refreshToken) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(`Token not found`);
     }
 
     const refreshTokenPayload = await this.jwtService.verifyAsync(
@@ -86,7 +82,7 @@ export class AuthService {
     );
 
     if (!isInRedis || isInRedis !== refreshToken) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(`Token not found`);
     }
 
     const { iat, exp, ...payload } = { ...refreshTokenPayload };
