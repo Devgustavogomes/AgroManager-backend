@@ -1,178 +1,115 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { AppModule } from 'src/app.module';
+import {
+  TestOrchestrator,
+  CreatedProducer,
+  SetupPropertyResult,
+} from '../test-orchestrator';
 
-let app: INestApplication;
+describe('E2E | Producer Tests', () => {
+  let app: INestApplication;
+  let orchestrator: TestOrchestrator;
 
-beforeAll(async () => {
-  const moduleRef = await Test.createTestingModule({
-    imports: [AppModule],
-  }).compile();
-
-  app = moduleRef.createNestApplication();
-  await app.init();
-});
-
-describe('Producer Good Path', () => {
-  let token: string;
-  let idProducer: string;
-
-  test('Create producer', async () => {
-    const payload = {
-      username: 'string',
-      email: 'teste4@gmail.com',
-      password: '<ApA$Xwmm<CvL8JVH',
-    };
-
-    const response = await request(app.getHttpServer())
-      .post('/producers')
-      .send(payload)
-      .expect(HttpStatus.CREATED);
-
-    idProducer = response.body.idProducer as string;
-  });
-
-  test('Login producer to get token', async () => {
-    const loginPayload = {
-      email: 'teste4@gmail.com',
-      password: '<ApA$Xwmm<CvL8JVH',
-    };
-
-    const response = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginPayload)
-      .expect(HttpStatus.CREATED);
-
-    token = response.body.accessToken as string;
-  });
-
-  test('Find by id producer', async () => {
-    await request(app.getHttpServer())
-      .get(`/producers/${idProducer}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(HttpStatus.OK);
-  });
-
-  test('Update producer', async () => {
-    const payload = {
-      username: 'striing',
-      email: 'testup4@gmail.com',
-    };
-
-    await request(app.getHttpServer())
-      .patch(`/producers/${idProducer}`)
-      .set('Authorization', `Bearer ${token}`)
-      .send(payload)
-      .expect(HttpStatus.OK);
-  });
-
-  test('Delete producer', async () => {
-    await request(app.getHttpServer())
-      .delete(`/producers/${idProducer}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(HttpStatus.NO_CONTENT);
-  });
-});
-
-describe('Producer Intruder Bad Path', () => {
-  let idProducer1: string;
-  let idProducer2: string;
-  let tokenProducer1: string;
-  let tokenProducer2: string;
   beforeAll(async () => {
-    const payload1 = {
-      username: 'string',
-      email: 'vi@gmail.com',
-      password: '<ApA$Xwmm<CvL8JVH',
-    };
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-    const response1 = await request(app.getHttpServer())
-      .post('/producers')
-      .send(payload1)
-      .expect(HttpStatus.CREATED);
-
-    idProducer1 = response1.body.idProducer as string;
-
-    const payload2 = {
-      username: 'string',
-      email: 'vi2@gmail.com',
-      password: '<ApA$Xwmm<CvL8JVH',
-    };
-
-    const response2 = await request(app.getHttpServer())
-      .post('/producers')
-      .send(payload2)
-      .expect(HttpStatus.CREATED);
-
-    idProducer2 = response2.body.idProducer as string;
-
-    const loginPayload1 = {
-      email: 'vi@gmail.com',
-      password: '<ApA$Xwmm<CvL8JVH',
-    };
-
-    const responseLogin1 = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginPayload1)
-      .expect(HttpStatus.CREATED);
-
-    tokenProducer1 = responseLogin1.body.accessToken as string;
-
-    const loginPayload2 = {
-      email: 'vi2@gmail.com',
-      password: '<ApA$Xwmm<CvL8JVH',
-    };
-
-    const responseLogin2 = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(loginPayload2)
-      .expect(HttpStatus.CREATED);
-
-    tokenProducer2 = responseLogin2.body.accessToken as string;
-  });
-
-  test('Intruder try to update a producer', async () => {
-    const payload = {
-      username: 'striing',
-      email: 'emailup10@gmail.com',
-    };
-
-    await request(app.getHttpServer())
-      .patch(`/producers/${idProducer1}`)
-      .set('Authorization', `Bearer ${tokenProducer2}`)
-      .send(payload)
-      .expect(HttpStatus.FORBIDDEN);
-  });
-
-  test('Intruder try to get another producer', async () => {
-    await request(app.getHttpServer())
-      .get(`/producers/${idProducer1}`)
-      .set('Authorization', `Bearer ${tokenProducer2}`)
-      .expect(HttpStatus.FORBIDDEN);
-  });
-
-  test('Intruder try to delete a producer', async () => {
-    await request(app.getHttpServer())
-      .delete(`/producers/${idProducer1}`)
-      .set('Authorization', `Bearer ${tokenProducer2}`)
-      .expect(HttpStatus.FORBIDDEN);
+    app = moduleRef.createNestApplication();
+    await app.init();
+    orchestrator = new TestOrchestrator(app);
   });
 
   afterAll(async () => {
-    await request(app.getHttpServer())
-      .delete(`/producers/${idProducer1}`)
-      .set('Authorization', `Bearer ${tokenProducer1}`)
-      .expect(HttpStatus.NO_CONTENT);
-
-    await request(app.getHttpServer())
-      .delete(`/producers/${idProducer2}`)
-      .set('Authorization', `Bearer ${tokenProducer2}`)
-      .expect(HttpStatus.NO_CONTENT);
+    await orchestrator.destroy();
+    await app.close();
   });
-});
 
-afterAll(async () => {
-  await app.close();
+  describe('Producer Good Path', () => {
+    let producerResult: SetupPropertyResult;
+
+    beforeAll(async () => {
+      producerResult = await orchestrator.setupProperty({
+        username: 'GoodPathUser',
+        email: `goodpath-${Date.now()}@gmail.com`,
+        password: 'GoodPassword123!',
+      });
+    });
+
+    test('Find by id producer', async () => {
+      await request(app.getHttpServer())
+        .get(`/producers/${producerResult.producer.idProducer}`)
+        .set('Authorization', `Bearer ${producerResult.producer.token}`)
+        .expect(HttpStatus.OK);
+    });
+
+    test('Update producer', async () => {
+      const payload = {
+        username: 'UpdatedGoodPathUser',
+        email: `updated-goodpath-${Date.now()}@gmail.com`,
+      };
+
+      await request(app.getHttpServer())
+        .patch(`/producers/${producerResult.producer.idProducer}`)
+        .set('Authorization', `Bearer ${producerResult.producer.token}`)
+        .send(payload)
+        .expect(HttpStatus.OK);
+    });
+
+    test('Delete producer', async () => {
+      await request(app.getHttpServer())
+        .delete(`/producers/${producerResult.producer.idProducer}`)
+        .set('Authorization', `Bearer ${producerResult.producer.token}`)
+        .expect(HttpStatus.NO_CONTENT);
+    });
+  });
+
+  describe('Producer Intruder Bad Path', () => {
+    let producer1: CreatedProducer;
+    let producer2: CreatedProducer;
+
+    beforeAll(async () => {
+      const p1Result = await orchestrator.setupProperty({
+        username: 'IntruderUser1',
+        email: `intruder1-${Date.now()}@gmail.com`,
+        password: 'IntruderPassword1!',
+      });
+      producer1 = p1Result.producer;
+
+      const p2Result = await orchestrator.setupProperty({
+        username: 'IntruderUser2',
+        email: `intruder2-${Date.now()}@gmail.com`,
+        password: 'IntruderPassword2!',
+      });
+      producer2 = p2Result.producer;
+    });
+
+    test('Intruder try to update a producer', async () => {
+      const payload = {
+        username: 'IntruderAttempt',
+      };
+
+      await request(app.getHttpServer())
+        .patch(`/producers/${producer1.idProducer}`)
+        .set('Authorization', `Bearer ${producer2.token}`)
+        .send(payload)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    test('Intruder try to get another producer', async () => {
+      await request(app.getHttpServer())
+        .get(`/producers/${producer1.idProducer}`)
+        .set('Authorization', `Bearer ${producer2.token}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+
+    test('Intruder try to delete a producer', async () => {
+      await request(app.getHttpServer())
+        .delete(`/producers/${producer1.idProducer}`)
+        .set('Authorization', `Bearer ${producer2.token}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+  });
 });

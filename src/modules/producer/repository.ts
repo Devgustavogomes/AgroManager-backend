@@ -56,8 +56,6 @@ export class ProducerRepository implements ProducerContract {
                 RETURNING *;
                 `;
 
-    console.log(data.email);
-    console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
     const params = [data.username, data.email, id];
     const producer = await this.databaseService.query<ProducerPersistence>(
       sql,

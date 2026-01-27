@@ -14,8 +14,12 @@ import { RolesGuards } from 'src/shared/guards/roles.guard';
 import { OwnerGuard } from 'src/shared/guards/owner.guard';
 import { OwnerService } from 'src/shared/decorators/owner.decorator';
 import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
-import { CreateCultureInput, CultureOutput, UpdateCultureInput } from './dto';
-import { IdCultureDto } from 'src/shared/types/idCultureParams';
+import {
+  CreateCultureInput,
+  CultureOutput,
+  IdCultureDto,
+  UpdateCultureInput,
+} from './dto';
 import { PropertyService } from '../property/service';
 
 @Controller(':id_property/cultures')

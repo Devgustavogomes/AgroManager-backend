@@ -13,8 +13,15 @@ const outputCultureSchema = createCultureSchema.extend({
   updatedAt: z.string().datetime().nullable(),
 });
 
+const idSchema = z.object({
+  id: z.uuid().optional(),
+  id_property: z.uuid(),
+});
+
 export class CreateCultureInput extends createZodDto(createCultureSchema) {}
 
 export class UpdateCultureInput extends createZodDto(createCultureSchema) {}
 
 export class CultureOutput extends createZodDto(outputCultureSchema) {}
+
+export class IdCultureDto extends createZodDto(idSchema) {}

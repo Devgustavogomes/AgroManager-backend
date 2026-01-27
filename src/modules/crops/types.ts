@@ -6,7 +6,7 @@ export enum CropStatus {
   FAILED = 'FAILED',
 }
 
-export enum StatusPest {
+export enum PestStatus {
   NONE = 'NONE',
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
