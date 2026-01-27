@@ -41,9 +41,7 @@ export class DatabaseService implements OnModuleDestroy, OnModuleInit {
     return client;
   }
 
-  async transactiontransaction<T>(
-    fn: (client: PoolClient) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
