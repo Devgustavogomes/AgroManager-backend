@@ -59,7 +59,7 @@
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.1.12",
     "@types/express": "^5.0.0",
-    "@types/node": "^25.0.9",
+    "@types/node": "^25.1.0",
     "@types/pg": "^8.16.0",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.39.2",
