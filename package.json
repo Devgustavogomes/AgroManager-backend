@@ -33,11 +33,11 @@
   "dependencies": {
     "@nestjs-modules/ioredis": "^2.2.1",
     "@nestjs/common": "^11.1.11",
-    "@nestjs/config": "^4.0.2",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.18",
     "@nestjs/jwt": "^11.0.1",
     "@nestjs/platform-express": "^11.1.12",
-    "@nestjs/swagger": "^11.2.4",
+    "@nestjs/swagger": "^11.4.3",
     "bcryptjs": "^3.0.2",
     "cross-env": "^10.1.0",
     "db-migrate": "^0.11.14",
